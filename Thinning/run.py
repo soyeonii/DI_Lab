@@ -11,13 +11,13 @@ import os
 #    sep_con_vow.run()
 
 
-# file_path = './img/'
-# file_names = os.listdir(file_path)
-# for file_name in file_names:
-#     reprocessing = Thinning(file_path + file_name)
-#     reprocessing.run()
+file_path = './data/'
+file_names = os.listdir(file_path)
+for file_name in file_names:
+    reprocessing = Thinning(os.path.splitext(file_name)[0])
+    reprocessing.run()
 
-Thinning('./img/0.bmp').run()
+# Thinning('./data/0.bmp').run()
 
 #img_path += 'preprocess.bmp'
 #case_model = Case_Model(img_path)

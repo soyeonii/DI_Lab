@@ -5,17 +5,14 @@ from PIL import ImageDraw
 
 
 class Preprocessing:
-    def __init__(self, path):
-        self.path = path
-
     def delete_background(self, img, size, padding):
         array = np.asarray(img)
         # print(array[50])
-        index = np.where(array < 1)
-        max_x = np.max(index[1])
-        min_x = np.min(index[1])
-        max_y = np.max(index[0])
-        min_y = np.min(index[0])
+        idx = np.where(array < 1)
+        max_x = np.max(idx[1])
+        min_x = np.min(idx[1])
+        max_y = np.max(idx[0])
+        min_y = np.min(idx[0])
         img = img[min_y:max_y, min_x:max_x]
         img = cv2.resize(img, (size - padding * 2, size - padding * 2))
 
@@ -24,9 +21,9 @@ class Preprocessing:
 
         return tmp
 
-    def save_img(self, img, add):
+    def save_img(self, img, file_name):
         img = img * 255
-        cv2.imwrite(os.path.splitext(self.path)[0] + add, img)
+        cv2.imwrite('./results/' + file_name, img)
 
     def draw_img(self, points):
         img = np.ones((64, 64))
