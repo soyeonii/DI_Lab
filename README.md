@@ -4,7 +4,7 @@
 
 ### - 2022.09.09 -
 세선화 기능 구현 완료  
-https://github.com/linbojin/Skeletonization-by-Zhang-Suen-Thinning-Algorithm
+참고 : https://github.com/linbojin/Skeletonization-by-Zhang-Suen-Thinning-Algorithm
 
 ### - 2022.09.16 -
 Todo : 획 나누기
