@@ -10,12 +10,13 @@ import os
 #    sep_con_vow = Sep_Con_Vow(img_path, case, case_sep)
 #    sep_con_vow.run()
 
-
-file_path = './data/'
+file_path = './Thinning/data/'
 file_names = os.listdir(file_path)
 for file_name in file_names:
-    reprocessing = Thinning(os.path.splitext(file_name)[0])
+    print('============================== ' + file_name + ' ==============================')
+    reprocessing = Thinning(file_path, os.path.splitext(file_name)[0])
     reprocessing.run()
+print('===================================================================')
 
 # Thinning('./data/0.bmp').run()
 
@@ -29,4 +30,4 @@ for file_name in file_names:
 
 #print('case: ', case)
 #print('sep', case_sep)
-print('세선화 완료')
+print('!! 세선화 완료 !!')

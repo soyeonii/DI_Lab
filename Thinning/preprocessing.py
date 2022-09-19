@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-from PIL import ImageDraw
+import time
 
 
 class Preprocessing:
@@ -21,9 +21,12 @@ class Preprocessing:
 
         return tmp
 
-    def save_img(self, img, file_name):
+    def save_img(self, img, file_name, end):
         img = img * 255
-        cv2.imwrite('./results/' + file_name, img)
+        path = './Thinning/results/' + file_name
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        cv2.imwrite(path + '/' + file_name + end, img)
 
     def draw_img(self, points):
         img = np.ones((64, 64))
@@ -32,9 +35,10 @@ class Preprocessing:
         return img
 
     def devide(self, graph):
+        start = time.time()
         points = []
-        size = 4  # frame 크기
-        space = 2  # point 간격
+        size = 3  # frame 크기
+        space = 4  # point 간격
         for i in range(0, 64, size):
             for j in range(0, 64, size):
                 tf = graph[i:i+size, j:j+size] == 0
@@ -47,10 +51,10 @@ class Preprocessing:
                     if not (graph[x-space:x+space, y-space:y+space] == 2).any():
                         graph[x][y] = 2  # 없다면 2로 point 표시
                         points.append((x, y))
-        print('------------------------------ point 모음 ------------------------------')
-        print(points)
-        print('------------------------------ point 개수 ------------------------------')
-        print(len(points))
+        print('------------------------------ points ------------------------------')
+        print(points,', ', len(points))
+        end = time.time()
+        print(f"{end - start:.5f} sec")
         return points
 
     # def devide(self, graph):

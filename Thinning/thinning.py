@@ -1,7 +1,6 @@
 from preprocessing import Preprocessing
 from skimage.filters import threshold_otsu
 from skimage import color
-from skimage import io
 from skimage.util import invert
 import numpy as np
 import cv2
@@ -10,13 +9,13 @@ import matplotlib.pyplot as plt
 
 
 class Thinning:
-    def __init__(self, file_name):
+    def __init__(self, file_path, file_name):
         "load image data"
         self.prep = Preprocessing()
         self.file_name = file_name
         # Gray image, rgb images need pre-conversion
         self.Img_Original = self.prep.delete_background(
-            color.rgb2gray(io.imread('./data/' + file_name + '.bmp')).copy(), 64, 5)
+            color.rgb2gray(cv2.imread(file_path + file_name + '.bmp')).copy(), 64, 5)
 
         "Convert gray images to binary images using Otsu's method"
         self.Otsu_Threshold = threshold_otsu(self.Img_Original)
@@ -75,21 +74,23 @@ class Thinning:
     def run(self):
         "Apply the algorithm on images"
         BW_Skeleton = invert(self.zhangSuen(self.BW_Original)).astype(np.uint8)
-        print('------------------------------ 자음 ------------------------------')
-        print(BW_Skeleton[5:35, 5:35])
-        print('------------------------------ 모음 ------------------------------')
-        print(BW_Skeleton[35:50, 40:])
+        # print('------------------------------ 왼쪽 ------------------------------')
+        # print(BW_Skeleton[5:35, 5:35])
+        # print(BW_Skeleton[35:60, 5:35])
+        # print('------------------------------ 오른쪽 ------------------------------')
+        # print(BW_Skeleton[5:35, 35:60])
+        # print(BW_Skeleton[35:60, 35:60])
 
         "Devide stroke"
         points = self.prep.devide(BW_Skeleton.copy())
         img = self.prep.draw_img(points)
 
-        self.prep.save_img(img, self.file_name + '_devide_space_2.bmp')
+        self.prep.save_img(img, self.file_name, '_3_4.bmp')
 
         # point 이어서 이미지 저장
-        # for i in range(1, len(points)):
-        #     img = cv2.line(img, points[i-1][::-1], points[i][::-1], (0, 0, 0))
-        # self.prep.save_img(img, '_devide_vowel.bmp')
+        for i in range(1, len(points)):
+            img = cv2.line(img, points[i-1][::-1], points[i][::-1], (0, 0, 0))
+        self.prep.save_img(img, self.file_name, '_consonant.bmp')
 
         # 나누어진 획마다 이미지 저장
         # for index, stroke in enumerate(strokes):
@@ -97,7 +98,7 @@ class Thinning:
 
         "Save image"
         # self.prep.save_img(invert(self.BW_Original), '_original.bmp')
-        self.prep.save_img(BW_Skeleton, self.file_name + '_process.bmp')
+        self.prep.save_img(BW_Skeleton, self.file_name, '_thinning.bmp')
 
         "Display the results"
         # _, ax = plt.subplots(1, 2)
