@@ -9,11 +9,14 @@
 ### - 2022.09.16 -
 Todo : 획 나누기
 
-이미지 Numpy 배열 출력  
+이미지 Numpy 배열 console 출력  
 이미지에 프레임을 적용해 구간별 상위 point를 찾는 방식 적용  
 일정 간격 이내에 다른 point가 있을 시 제외
 
-```
-frame_size = 4
-point_space = 2
+### - 2022.09.19 -
+최고 성능 프레임 크기, point 간격 색출
+
+```py
+size = 3
+space = 4
 ```
