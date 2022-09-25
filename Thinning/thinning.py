@@ -4,7 +4,6 @@ from skimage import color
 from skimage.util import invert
 import numpy as np
 import cv2
-import os
 import matplotlib.pyplot as plt
 
 
@@ -15,7 +14,7 @@ class Thinning:
         self.file_name = file_name
         # Gray image, rgb images need pre-conversion
         self.Img_Original = self.prep.delete_background(
-            color.rgb2gray(cv2.imread(file_path + file_name + '.bmp')).copy(), 64, 5)
+            color.rgb2gray(cv2.imread(file_path + file_name + '.bmp')), 64, 5)
 
         "Convert gray images to binary images using Otsu's method"
         self.Otsu_Threshold = threshold_otsu(self.Img_Original)
@@ -81,16 +80,21 @@ class Thinning:
         # print(BW_Skeleton[5:35, 35:60])
         # print(BW_Skeleton[35:60, 35:60])
 
-        "Devide stroke"
-        points = self.prep.devide(BW_Skeleton.copy())
+        "Simplify stroke"
+        points = self.prep.simplify(BW_Skeleton.copy())
         img = self.prep.draw_img(points)
+        # self.prep.save_img(img, self.file_name, '_3_4.bmp') !!!!!!!!!!!
 
-        self.prep.save_img(img, self.file_name, '_3_4.bmp')
+        "Devide stroke"
+        stroke_points = self.prep.devide(points)
+        for i in range(len(stroke_points)):
+            test_img = self.prep.draw_img(stroke_points[i])
+            self.prep.save_img(test_img, self.file_name, '_test_' + str(i) + '.bmp')
 
         # point 이어서 이미지 저장
-        for i in range(1, len(points)):
-            img = cv2.line(img, points[i-1][::-1], points[i][::-1], (0, 0, 0))
-        self.prep.save_img(img, self.file_name, '_consonant.bmp')
+        # for i in range(1, len(points)):
+        #     img = cv2.line(img, points[i-1][::-1], points[i][::-1], (0, 0, 0))
+        # self.prep.save_img(img, self.file_name, '_consonant.bmp')
 
         # 나누어진 획마다 이미지 저장
         # for index, stroke in enumerate(strokes):
@@ -98,7 +102,7 @@ class Thinning:
 
         "Save image"
         # self.prep.save_img(invert(self.BW_Original), '_original.bmp')
-        self.prep.save_img(BW_Skeleton, self.file_name, '_thinning.bmp')
+        # self.prep.save_img(BW_Skeleton, self.file_name, '_thinning.bmp') !!!!!!!!!
 
         "Display the results"
         # _, ax = plt.subplots(1, 2)

@@ -1,8 +1,9 @@
+from multiprocessing.context import SpawnContext
+from re import X
 import cv2
 import numpy as np
 import os
 import time
-
 
 class Preprocessing:
     def delete_background(self, img, size, padding):
@@ -23,7 +24,7 @@ class Preprocessing:
 
     def save_img(self, img, file_name, end):
         img = img * 255
-        path = './Thinning/results/' + file_name
+        path = './Thinning/results/consonant/' + file_name
         if not os.path.isdir(path):
             os.mkdir(path)
         cv2.imwrite(path + '/' + file_name + end, img)
@@ -34,11 +35,11 @@ class Preprocessing:
             img[x][y] = 0
         return img
 
-    def devide(self, graph):
-        start = time.time()
+    def simplify(self, graph):
+        size = 3    # frame 크기
+        space = 4   # 최소 point 간격
+        # start = time.time()
         points = []
-        size = 3  # frame 크기
-        space = 4  # point 간격
         for i in range(0, 64, size):
             for j in range(0, 64, size):
                 tf = graph[i:i+size, j:j+size] == 0
@@ -53,9 +54,65 @@ class Preprocessing:
                         points.append((x, y))
         print('------------------------------ points ------------------------------')
         print(points,', ', len(points))
-        end = time.time()
-        print(f"{end - start:.5f} sec")
+        # end = time.time()
+        # print(f"{end - start:.5f} sec")
         return points
+
+    def devide(self, points):
+        n = len(points)
+        size = 8
+        result = []
+        stack = []
+        check = [[False] * 64 for _ in range(64)]
+        num = 0
+
+        def DFS(x, y):
+            nonlocal num
+            check[x][y] = True
+            stack.append((x, y))
+            surrond_points = []
+            for i in range(x - size, x + size):
+                for j in range(y - size, y + size):
+                    if (i, j) in points and not check[i][j]:
+                        surrond_points.append((i, j))
+            for i, j in surrond_points:
+                if num == 0 or num == self.get_num([i - stack[-1][0], j - stack[-1][1]]):
+                    if num == 0:
+                        num = self.get_num([i - stack[-1][0], j - stack[-1][1]])
+                    DFS(i, j)
+
+        for i in range(n):
+            x = points[i][0]
+            y = points[i][1]
+            if not check[x][y]:
+                DFS(x, y)
+                result.append(stack.copy())
+                stack.clear()
+                num = 0
+
+        return result
+
+    def get_num(self, diff):
+        if diff[1] == 0:
+            return 1 if diff[0] >= 0 else 2
+        elif diff[0] == 0:
+            return 3 if diff[1] >= 0 else 4
+        else:
+            gradient = diff[1] / diff[0]
+            if diff[0] > 0:
+                if gradient >= 1:
+                    return 3
+                elif -1 <= gradient < 1:
+                    return 1
+                else:
+                    return 4
+            else:
+                if gradient >= 1:
+                    return 4
+                elif -1 <= gradient < 1:
+                    return 2
+                else:
+                    return 3
 
     # def devide(self, graph):
     #     result = []

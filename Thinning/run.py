@@ -9,14 +9,15 @@ import os
 #
 #    sep_con_vow = Sep_Con_Vow(img_path, case, case_sep)
 #    sep_con_vow.run()
+from skimage import color
+import cv2
 
-file_path = './Thinning/data/'
+file_path = './Thinning/data/consonant/'
 file_names = os.listdir(file_path)
 for file_name in file_names:
     print('============================== ' + file_name + ' ==============================')
-    reprocessing = Thinning(file_path, os.path.splitext(file_name)[0])
-    reprocessing.run()
-print('===================================================================')
+    Thinning(file_path, os.path.splitext(file_name)[0]).run()
+print('====================================================================')
 
 # Thinning('./data/0.bmp').run()
 
