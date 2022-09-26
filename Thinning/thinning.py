@@ -92,9 +92,17 @@ class Thinning:
             self.prep.save_img(test_img, self.file_name, '_test_' + str(i) + '.bmp')
 
         # point 이어서 이미지 저장
-        # for i in range(1, len(points)):
-        #     img = cv2.line(img, points[i-1][::-1], points[i][::-1], (0, 0, 0))
-        # self.prep.save_img(img, self.file_name, '_consonant.bmp')
+        for i, stroke_point in enumerate(stroke_points):
+            img = np.ones((64, 64))
+            for j in range(1, len(stroke_point)):
+                img = cv2.line(img, stroke_point[j-1][::-1], stroke_point[j][::-1], (0, 0, 0))
+            self.prep.save_img(img, self.file_name, '_consonant_' + str(i) + '.bmp')
+
+        img = np.ones((64, 64))
+        for i, stroke_point in enumerate(stroke_points):
+            for j in range(1, len(stroke_point)):
+                img = cv2.line(img, stroke_point[j-1][::-1], stroke_point[j][::-1], (0, 0, 0))
+        self.prep.save_img(img, self.file_name, '_consonant.bmp')
 
         # 나누어진 획마다 이미지 저장
         # for index, stroke in enumerate(strokes):

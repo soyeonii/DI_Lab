@@ -36,8 +36,8 @@ class Preprocessing:
         return img
 
     def simplify(self, graph):
-        size = 3    # frame 크기
-        space = 4   # 최소 point 간격
+        size = 2    # frame 크기
+        space = 3   # 최소 point 간격
         # start = time.time()
         points = []
         for i in range(0, 64, size):
@@ -60,27 +60,25 @@ class Preprocessing:
 
     def devide(self, points):
         n = len(points)
-        size = 8
+        size = 6
         result = []
         stack = []
         check = [[False] * 64 for _ in range(64)]
         num = 0
-
         def DFS(x, y):
             nonlocal num
             check[x][y] = True
             stack.append((x, y))
-            surrond_points = []
+            surround_points = []
             for i in range(x - size, x + size):
                 for j in range(y - size, y + size):
                     if (i, j) in points and not check[i][j]:
-                        surrond_points.append((i, j))
-            for i, j in surrond_points:
+                        surround_points.append((i, j))
+            for i, j in surround_points:
                 if num == 0 or num == self.get_num([i - stack[-1][0], j - stack[-1][1]]):
                     if num == 0:
                         num = self.get_num([i - stack[-1][0], j - stack[-1][1]])
                     DFS(i, j)
-
         for i in range(n):
             x = points[i][0]
             y = points[i][1]
@@ -89,7 +87,6 @@ class Preprocessing:
                 result.append(stack.copy())
                 stack.clear()
                 num = 0
-
         return result
 
     def get_num(self, diff):
