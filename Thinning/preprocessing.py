@@ -1,9 +1,6 @@
-from multiprocessing.context import SpawnContext
-from re import X
 import cv2
 import numpy as np
 import os
-import time
 
 class Preprocessing:
     def delete_background(self, img, size, padding):
@@ -24,7 +21,7 @@ class Preprocessing:
 
     def save_img(self, img, file_name, end):
         img = img * 255
-        path = './Thinning/results/consonant/' + file_name
+        path = './Thinning/results/' + file_name
         if not os.path.isdir(path):
             os.mkdir(path)
         cv2.imwrite(path + '/' + file_name + end, img)

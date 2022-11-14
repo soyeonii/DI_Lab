@@ -83,20 +83,20 @@ class Thinning:
         "Simplify stroke"
         points = self.prep.simplify(BW_Skeleton.copy())
         img = self.prep.draw_img(points)
-        # self.prep.save_img(img, self.file_name, '_3_4.bmp') !!!!!!!!!!!
+        self.prep.save_img(img, self.file_name, '_2_3.bmp')
 
         "Devide stroke"
         stroke_points = self.prep.devide(points)
-        for i in range(len(stroke_points)):
-            test_img = self.prep.draw_img(stroke_points[i])
-            self.prep.save_img(test_img, self.file_name, '_test_' + str(i) + '.bmp')
+        # for i in range(len(stroke_points)):
+        #     test_img = self.prep.draw_img(stroke_points[i])
+        #     self.prep.save_img(test_img, self.file_name, '_test_' + str(i) + '.bmp')
 
         # point 이어서 이미지 저장
-        for i, stroke_point in enumerate(stroke_points):
-            img = np.ones((64, 64))
-            for j in range(1, len(stroke_point)):
-                img = cv2.line(img, stroke_point[j-1][::-1], stroke_point[j][::-1], (0, 0, 0))
-            self.prep.save_img(img, self.file_name, '_consonant_' + str(i) + '.bmp')
+        # for i, stroke_point in enumerate(stroke_points):
+        #     img = np.ones((64, 64))
+        #     for j in range(1, len(stroke_point)):
+        #         img = cv2.line(img, stroke_point[j-1][::-1], stroke_point[j][::-1], (0, 0, 0))
+        #     self.prep.save_img(img, self.file_name, '_consonant_' + str(i) + '.bmp')
 
         img = np.ones((64, 64))
         for i, stroke_point in enumerate(stroke_points):
@@ -110,7 +110,7 @@ class Thinning:
 
         "Save image"
         # self.prep.save_img(invert(self.BW_Original), '_original.bmp')
-        # self.prep.save_img(BW_Skeleton, self.file_name, '_thinning.bmp') !!!!!!!!!
+        self.prep.save_img(BW_Skeleton, self.file_name, '_thinning.bmp')
 
         "Display the results"
         # _, ax = plt.subplots(1, 2)

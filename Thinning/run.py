@@ -2,17 +2,14 @@ from thinning import Thinning
 import os
 #from run_morphology import Morphology
 
-
 # def case123_sep(img_path, case):
 #    sep_case_model = Sep_Case_Model(img_path, case)
 #    case_sep = sep_case_model.run()
 #
 #    sep_con_vow = Sep_Con_Vow(img_path, case, case_sep)
 #    sep_con_vow.run()
-from skimage import color
-import cv2
 
-file_path = './Thinning/data/consonant/'
+file_path = './Thinning/data/'
 file_names = os.listdir(file_path)
 for file_name in file_names:
     print('============================== ' + file_name + ' ==============================')
