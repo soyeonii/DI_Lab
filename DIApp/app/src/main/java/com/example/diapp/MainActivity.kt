@@ -61,14 +61,14 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btn_save).setOnClickListener {
             for (folder in File("/data/data/com.example.diapp").listFiles()) {
-                if (folder.toString().split('/')[4].startsWith("app")) {
+                if (folder.toString().split('/')[4].startsWith("app_88")) {
                     for (file in folder.listFiles()) {
                         Log.d("file_directory", file.toString())
                         var bitmap = BitmapFactory.decodeFile(file.toString())
                         var baos = ByteArrayOutputStream()
                         bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
                         var data = Base64.encodeToString(baos.toByteArray(), 0)
-                        SocketThread(data).start()
+                        SocketThread(file.nameWithoutExtension, data).start()
                         file.delete()
                     }
                     folder.delete()
@@ -94,14 +94,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    inner class SocketThread(private var data: String) : Thread() {
+    inner class SocketThread(private var fileName: String, private var data: String) : Thread() {
         override fun run() {
             try {
-                var socket = Socket("172.30.1.19", 9999)
+                var socket = Socket("172.30.1.46", 1215)
 
                 var output = socket.getOutputStream()
                 var dos = DataOutputStream(output)
 
+                dos.writeUTF(fileName)
                 dos.writeBytes(data)
 
                 socket.close()
