@@ -14,7 +14,7 @@ class Thinning:
         self.file_name = file_name
         # Gray image, rgb images need pre-conversion
         self.Img_Original = self.prep.delete_background(
-            color.rgb2gray(cv2.imread(file_path + file_name + '.bmp')), 64, 5)
+            color.rgb2gray(cv2.imread(file_path + file_name + '.bmp')), 128, 5)
 
         "Convert gray images to binary images using Otsu's method"
         self.Otsu_Threshold = threshold_otsu(self.Img_Original)
@@ -91,20 +91,20 @@ class Thinning:
         #     test_img = self.prep.draw_img(stroke_points[i])
         #     self.prep.save_img(test_img, self.file_name, '_test_' + str(i) + '.bmp')
 
-        # point 이어서 이미지 저장
+        ## point 이어서 이미지 저장
         # for i, stroke_point in enumerate(stroke_points):
-        #     img = np.ones((64, 64))
+        #     img = np.ones((128, 128))
         #     for j in range(1, len(stroke_point)):
         #         img = cv2.line(img, stroke_point[j-1][::-1], stroke_point[j][::-1], (0, 0, 0))
         #     self.prep.save_img(img, self.file_name, '_consonant_' + str(i) + '.bmp')
 
-        img = np.ones((64, 64))
+        img = np.ones((128, 128))
         for i, stroke_point in enumerate(stroke_points):
             for j in range(1, len(stroke_point)):
                 img = cv2.line(img, stroke_point[j-1][::-1], stroke_point[j][::-1], (0, 0, 0))
         self.prep.save_img(img, self.file_name, '_consonant.bmp')
 
-        # 나누어진 획마다 이미지 저장
+        ## 나누어진 획마다 이미지 저장
         # for index, stroke in enumerate(strokes):
         #     self.prep.save_img(self.prep.draw_img(stroke), '_devide_' + str(index) + '.bmp')
 

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import os
+# import time
 
 class Preprocessing:
     def delete_background(self, img, size, padding):
@@ -27,18 +28,18 @@ class Preprocessing:
         cv2.imwrite(path + '/' + file_name + end, img)
 
     def draw_img(self, points):
-        img = np.ones((64, 64))
+        img = np.ones((128, 128))
         for x, y in points:
             img[x][y] = 0
         return img
 
     def simplify(self, graph):
-        size = 2    # frame 크기
-        space = 3   # 최소 point 간격
+        size = 4    # frame 크기
+        space = 4   # 최소 point 간격
         # start = time.time()
         points = []
-        for i in range(0, 64, size):
-            for j in range(0, 64, size):
+        for i in range(0, 128, size):
+            for j in range(0, 128, size):
                 tf = graph[i:i+size, j:j+size] == 0
                 if tf.any():  # 흑백 부분이 있는지 여부
                     # frame 내의 흑백 부분 찾기
@@ -57,10 +58,10 @@ class Preprocessing:
 
     def devide(self, points):
         n = len(points)
-        size = 6
+        size = 12
         result = []
         stack = []
-        check = [[False] * 64 for _ in range(64)]
+        check = [[False] * 128 for _ in range(128)]
         num = 0
         def DFS(x, y):
             nonlocal num
@@ -126,13 +127,13 @@ class Preprocessing:
     #             for i in range(8):
     #                 nx = x + dx[i]
     #                 ny = y + dy[i]
-    #                 if 0 <= nx < 64 and 0 <= ny < 64 and graph[nx][ny] == 0:
+    #                 if 0 <= nx < 128 and 0 <= ny < 128 and graph[nx][ny] == 0:
     #                     graph[nx][ny] = 1
     #                     stack.append((nx, ny))
     #                     DFS(nx, ny)
 
-    #     for i in range(64):
-    #         for j in range(64):
+    #     for i in range(128):
+    #         for j in range(128):
     #             if graph[j][i] == 0:
     #                 graph[j][i] = 1
     #                 stack.append((j, i))
