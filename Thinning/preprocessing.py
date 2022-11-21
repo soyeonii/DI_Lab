@@ -62,9 +62,9 @@ class Preprocessing:
         result = []
         stack = []
         check = [[False] * 128 for _ in range(128)]
-        num = 0
+        slope = 0
         def DFS(x, y):
-            nonlocal num
+            nonlocal slope
             check[x][y] = True
             stack.append((x, y))
             surround_points = []
@@ -72,7 +72,9 @@ class Preprocessing:
                 for j in range(y - size, y + size):
                     if (i, j) in points and not check[i][j]:
                         surround_points.append((i, j))
-            for i, j in surround_points:
+            for surround_point in surround_points:
+                tmp_slope = self.get_slope(surround_point, stack[-1])
+
                 if num == 0 or num == self.get_num([i - stack[-1][0], j - stack[-1][1]]):
                     if num == 0:
                         num = self.get_num([i - stack[-1][0], j - stack[-1][1]])
@@ -86,6 +88,9 @@ class Preprocessing:
                 stack.clear()
                 num = 0
         return result
+
+    def get_slope(self, a, b):
+        return (b[0] - a[0]) / (b[1] - a[1])
 
     def get_num(self, diff):
         if diff[1] == 0:
