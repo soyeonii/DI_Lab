@@ -1,31 +1,17 @@
 from thinning import Thinning
+from multiprocessing import Process
 import os
-#from run_morphology import Morphology
 
-# def case123_sep(img_path, case):
-#    sep_case_model = Sep_Case_Model(img_path, case)
-#    case_sep = sep_case_model.run()
-#
-#    sep_con_vow = Sep_Con_Vow(img_path, case, case_sep)
-#    sep_con_vow.run()
-
-file_path = './Thinning/data/'
+file_path = './Thinning/data/case1/seunggi/'
 file_names = os.listdir(file_path)
-for file_name in file_names:
-    print('============================== ' + file_name + ' ==============================')
-    Thinning(file_path, os.path.splitext(file_name)[0]).run()
-print('====================================================================')
+total_number = 171
+consonant_number = 14
 
-# Thinning('./data/0.bmp').run()
+def run(start, end):
+    for file_name in file_names[start:end]:
+        print('=========== ' + file_name.rjust(7, " ") + ' ===========')
+        Thinning(file_path, os.path.splitext(file_name)[0]).run()
 
-#img_path += 'preprocess.bmp'
-#case_model = Case_Model(img_path)
-#case = case_model.run()
-
-# if case == 'case1' or case == 'case2' or case == 'case3':
-#    case123_sep(img_path, case)
-
-
-#print('case: ', case)
-#print('sep', case_sep)
-print('!! 세선화 완료 !!')
+if __name__ == "__main__":
+    for i in range(0, total_number, consonant_number):
+        Process(target=run, args=(i, i+consonant_number)).start()

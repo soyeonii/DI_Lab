@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 class Thinning:
     def __init__(self, file_path, file_name):
         "load image data"
-        self.prep = Preprocessing()
+        self.prep = Preprocessing(file_path.split('/')[-2])
         self.file_name = file_name
         # Gray image, rgb images need pre-conversion
         self.Img_Original = self.prep.delete_background(
@@ -102,7 +102,7 @@ class Thinning:
         for i, stroke_point in enumerate(stroke_points):
             for j in range(1, len(stroke_point)):
                 img = cv2.line(img, stroke_point[j-1][::-1], stroke_point[j][::-1], (0, 0, 0))
-        self.prep.save_img(img, self.file_name, '_consonant.bmp')
+        self.prep.save_img(img, self.file_name, '_sep.bmp')
 
         ## 나누어진 획마다 이미지 저장
         # for index, stroke in enumerate(strokes):

@@ -1,9 +1,13 @@
 import cv2
 import numpy as np
 import os
+from collections import deque
 # import time
 
 class Preprocessing:
+    def __init__(self, folder_name):
+        self.folder_name = folder_name
+
     def delete_background(self, img, size, padding):
         array = np.asarray(img)
         # print(array[50])
@@ -22,7 +26,7 @@ class Preprocessing:
 
     def save_img(self, img, file_name, end):
         img = img * 255
-        path = './Thinning/results/' + file_name
+        path = './Thinning/results/case1/' + self.folder_name + '/' + file_name
         if not os.path.isdir(path):
             os.mkdir(path)
         cv2.imwrite(path + '/' + file_name + end, img)
@@ -33,9 +37,13 @@ class Preprocessing:
             img[x][y] = 0
         return img
 
+    def erosion_dilation(self, img):
+        kernel = np.ones((3, 3), np.uint8)
+        return cv2.dilate(cv2.erode(img, kernel, iterations = 1), kernel, iterations = 1)
+
     def simplify(self, graph):
-        size = 4    # frame 크기
-        space = 4   # 최소 point 간격
+        size = 2    # frame 크기
+        space = 3   # 최소 point 간격
         # start = time.time()
         points = []
         for i in range(0, 128, size):
@@ -50,47 +58,58 @@ class Preprocessing:
                     if not (graph[x-space:x+space, y-space:y+space] == 2).any():
                         graph[x][y] = 2  # 없다면 2로 point 표시
                         points.append((x, y))
-        print('------------------------------ points ------------------------------')
-        print(points,', ', len(points))
+        # print('------------------------------ points ------------------------------')
+        # print(points,', ', len(points))
         # end = time.time()
         # print(f"{end - start:.5f} sec")
         return points
 
     def devide(self, points):
         n = len(points)
-        size = 12
+        size = 8
         result = []
         stack = []
         check = [[False] * 128 for _ in range(128)]
-        slope = 0
-        def DFS(x, y):
-            nonlocal slope
-            check[x][y] = True
-            stack.append((x, y))
-            surround_points = []
-            for i in range(x - size, x + size):
+        num = 0
+        def BFS(start):
+            nonlocal num
+            queue = deque()
+            check[start[0]][start[1]] = True
+            stack.append(start)
+            queue.append(start)
+            while queue:
+                x, y = queue.popleft()
+                surround_points = []
                 for j in range(y - size, y + size):
-                    if (i, j) in points and not check[i][j]:
-                        surround_points.append((i, j))
-            for surround_point in surround_points:
-                tmp_slope = self.get_slope(surround_point, stack[-1])
-
-                if num == 0 or num == self.get_num([i - stack[-1][0], j - stack[-1][1]]):
-                    if num == 0:
-                        num = self.get_num([i - stack[-1][0], j - stack[-1][1]])
-                    DFS(i, j)
+                    for i in range(x - size, x + size):
+                        if (i, j) in points and not check[i][j]:
+                            if num == 0 or num == self.get_num([i - stack[-1][0], j - stack[-1][1]]):
+                                if num == 0:
+                                    num = self.get_num([i - stack[-1][0], j - stack[-1][1]])
+                                surround_points.append((i, j))
+                if surround_points:
+                    index = 0
+                    if num == 1 or num == 2:
+                        surround_points.sort(key=lambda x: self.get_slope(stack[-1], x), reverse=True)
+                        if self.get_slope(stack[-1], surround_points[-1]) == 0:
+                            index = -1
+                    else:
+                        surround_points.sort(key=lambda x: self.get_slope(stack[-1], x))
+                    check[surround_points[index][0]][surround_points[index][1]] = True
+                    stack.append(surround_points[index])
+                    queue.append(surround_points[index])
         for i in range(n):
             x = points[i][0]
             y = points[i][1]
             if not check[x][y]:
-                DFS(x, y)
+                BFS((x, y))
                 result.append(stack.copy())
                 stack.clear()
                 num = 0
         return result
 
-    def get_slope(self, a, b):
-        return (b[0] - a[0]) / (b[1] - a[1])
+    def get_slope(self, p1, p2):
+        return abs((p1[0]-p2[0]) / (p1[1]-p2[1])) if p1[1] != p2[1] else 0
 
     def get_num(self, diff):
         if diff[1] == 0:
