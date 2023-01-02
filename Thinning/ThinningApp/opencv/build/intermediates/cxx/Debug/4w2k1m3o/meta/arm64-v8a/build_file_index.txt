@@ -1,0 +1,1 @@
+C:\GitHub\DI_Lab\Thinning\ThinningApp\opencv\libcxx_helper\CMakeLists.txt

@@ -1,0 +1,2 @@
+ninja: Entering directory `C:\GitHub\DI_Lab\Thinning\ThinningApp\opencv\.cxx\Debug\4w2k1m3o\x86'
+ninja: no work to do.
