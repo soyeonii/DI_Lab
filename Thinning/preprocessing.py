@@ -133,6 +133,24 @@ class Preprocessing:
                 else:
                     return 3
 
+    # def get_quadrant(self, diff):
+    #     x, y = diff
+    #     if x == 0:
+    #         return 3 if y >= 0 else 1
+    #     if y == 0:
+    #         return 4 if x >= 0 else 2
+        
+    #     if x > 0:
+    #         if y > 0:
+    #             return 1
+    #         else:
+    #             return 4
+    #     else:
+    #         if y > 0:
+    #             return 2
+    #         else:
+    #             return 3
+
     # def devide(self, graph):
     #     result = []
     #     stack = []
