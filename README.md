@@ -36,5 +36,9 @@ size = 8
 ```
 
 ### - 2022.11.28 -
-case1 데이터 추가, 테스트 완료(성능 향상)   
+case1 데이터 추가, 테스트 완료 (성능 향상)   
 획 데이터 분리 기능 일부 수정   
+
+### - 2023.01.03 -
+기존 파이썬 코드를 코틀린으로 변환 중 ([테스트 앱](https://github.com/soyeonii/DI_Lab/tree/main/Thinning/ThinningApp))   
+
