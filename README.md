@@ -42,3 +42,6 @@ case1 데이터 추가, 테스트 완료 (성능 향상)
 ### - 2023.01.03 -
 기존 파이썬 코드를 코틀린으로 변환 중 ([테스트 앱](https://github.com/soyeonii/DI_Lab/tree/main/Thinning/ThinningApp))   
 
+### - 2023.01.17 -
+실제 필기 데이터 결과 확인   
+하나의 획 임에도 나눠지는 획 조합 필요
