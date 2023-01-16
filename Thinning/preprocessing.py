@@ -37,8 +37,8 @@ class Preprocessing:
         return cv2.dilate(cv2.erode(img, kernel, iterations = 1), kernel, iterations = 1)
 
     def simplify(self, graph):
-        size = 2    # frame 크기
-        space = 3  # 최소 point 간격
+        size = 3    # frame 크기
+        space = 4  # 최소 point 간격
         points = []
         for i in range(0, 128, size):
             for j in range(0, 128, size):
@@ -56,7 +56,7 @@ class Preprocessing:
 
     def devide(self, points):
         n = len(points)
-        size = 8
+        size = 10
         result = []
         stack = []
         check = [[False] * 128 for _ in range(128)]
