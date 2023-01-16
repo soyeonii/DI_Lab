@@ -2,33 +2,28 @@ import cv2
 import numpy as np
 import os
 from collections import deque
-# import time
 
 class Preprocessing:
     def __init__(self, folder_name):
         self.folder_name = folder_name
 
     def delete_background(self, img, size, padding):
-        array = np.asarray(img)
-        # print(array[50])
-        idx = np.where(array < 1)
+        idx = np.where(img == 1)
         max_x = np.max(idx[1])
         min_x = np.min(idx[1])
         max_y = np.max(idx[0])
         min_y = np.min(idx[0])
         img = img[min_y:max_y, min_x:max_x]
         img = cv2.resize(img, (size - padding * 2, size - padding * 2))
-
-        tmp = np.ones((size, size))
+        tmp = np.zeros((size, size), np.uint8)
         tmp[padding:size-padding, padding:size-padding] = img
-
         return tmp
 
     def save_img(self, img, file_name, end):
-        img = img * 255
-        path = './Thinning/results/case1/' + self.folder_name + '/' + file_name
+        # img = img * 255
+        path = './Thinning/results/230110/' + self.folder_name + '/' + file_name
         if not os.path.isdir(path):
-            os.mkdir(path)
+            os.makedirs(path)
         cv2.imwrite(path + '/' + file_name + end, img)
 
     def draw_img(self, points):
@@ -43,8 +38,7 @@ class Preprocessing:
 
     def simplify(self, graph):
         size = 2    # frame 크기
-        space = 3   # 최소 point 간격
-        # start = time.time()
+        space = 3  # 최소 point 간격
         points = []
         for i in range(0, 128, size):
             for j in range(0, 128, size):
@@ -58,10 +52,6 @@ class Preprocessing:
                     if not (graph[x-space:x+space, y-space:y+space] == 2).any():
                         graph[x][y] = 2  # 없다면 2로 point 표시
                         points.append((x, y))
-        # print('------------------------------ points ------------------------------')
-        # print(points,', ', len(points))
-        # end = time.time()
-        # print(f"{end - start:.5f} sec")
         return points
 
     def devide(self, points):
