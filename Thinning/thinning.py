@@ -18,9 +18,8 @@ class Thinning:
     def neighbours(self, x, y, image):
         "Return 8-neighbours of image point P1(x,y), in a clockwise order"
         img = image
-        x_1, y_1, x1, y1 = x-1, y-1, x+1, y+1
-        return [img[x_1][y], img[x_1][y1], img[x][y1], img[x1][y1],     # P2,P3,P4,P5
-                img[x1][y], img[x1][y_1], img[x][y_1], img[x_1][y_1]]    # P6,P7,P8,P9
+        return [img[x-1][y], img[x-1][y+1], img[x][y+1], img[x+1][y+1],     # P2,P3,P4,P5
+                img[x+1][y], img[x+1][y-1], img[x][y-1], img[x-1][y-1]]     # P6,P7,P8,P9
 
     def transitions(self, neighbours):
         "No. of 0,1 patterns (transitions from 0 to 1) in the ordered sequence"
@@ -79,7 +78,7 @@ class Thinning:
         self.prep.save_img(self.prep.draw_img(points) * 255, self.file_name, '_2_3.bmp')
 
         "Devide stroke"
-        stroke_points = self.prep.devide(points)
+        stroke_points = self.prep.join_points(self.prep.devide(points))
         # for i in range(len(stroke_points)):
         #     test_img = self.prep.draw_img(stroke_points[i])
         #     self.prep.save_img(test_img, self.file_name, '_test_' + str(i) + '.bmp')

@@ -2,10 +2,11 @@ from thinning import Thinning
 from multiprocessing import Process
 import os
 
-file_path = './Thinning/data/230110/soyeon/'
+file_path = './Thinning/data/230110/jihong/'
 file_names = os.listdir(file_path)
 # total_number = 171
 # consonant_number = 14
+
 
 def run(start, end):
     for file_name in file_names[start:end]:
@@ -15,6 +16,7 @@ def run(start, end):
 # if __name__ == "__main__":
 #     for i in range(0, total_number, consonant_number):
 #         Process(target=run, args=(i, i+consonant_number)).start()
+
 
 if __name__ == "__main__":
     run(0, 14)

@@ -20,7 +20,6 @@ class Preprocessing:
         return tmp
 
     def save_img(self, img, file_name, end):
-        # img = img * 255
         path = './Thinning/results/230110/' + self.folder_name + '/' + file_name
         if not os.path.isdir(path):
             os.makedirs(path)
@@ -41,7 +40,7 @@ class Preprocessing:
         space = 4  # 최소 point 간격
         points = []
         for i in range(0, 128, size):
-            for j in range(0, 128, size):
+            for j in reversed(range(0, 128, size)):
                 tf = graph[i:i+size, j:j+size] == 0
                 if tf.any():  # 흑백 부분이 있는지 여부
                     # frame 내의 흑백 부분 찾기
@@ -60,7 +59,7 @@ class Preprocessing:
         result = []
         stack = []
         check = [[False] * 128 for _ in range(128)]
-        num = 0
+        num = -1
         def BFS(start):
             nonlocal num
             queue = deque()
@@ -73,55 +72,86 @@ class Preprocessing:
                 for j in range(y - size, y + size):
                     for i in range(x - size, x + size):
                         if (i, j) in points and not check[i][j]:
-                            if num == 0 or num == self.get_num([i - stack[-1][0], j - stack[-1][1]]):
-                                if num == 0:
-                                    num = self.get_num([i - stack[-1][0], j - stack[-1][1]])
+                            tmp = self.get_num([i - stack[-1][0], j - stack[-1][1]])
+                            if num == -1 or num == tmp:
+                                if num == -1:
+                                    num = tmp
                                 surround_points.append((i, j))
                 if surround_points:
-                    index = 0
-                    if num == 1 or num == 2:
-                        surround_points.sort(key=lambda x: self.get_slope(stack[-1], x), reverse=True)
-                        if self.get_slope(stack[-1], surround_points[-1]) == 0:
-                            index = -1
-                    else:
-                        surround_points.sort(key=lambda x: self.get_slope(stack[-1], x))
-                    check[surround_points[index][0]][surround_points[index][1]] = True
-                    stack.append(surround_points[index])
-                    queue.append(surround_points[index])
+                    surround_points.sort(key=lambda x: abs(stack[-1][(num+1) % 2] - x[(num+1) % 2]))
+                    check[surround_points[0][0]][surround_points[0][1]] = True
+                    stack.append(surround_points[0])
+                    queue.append(surround_points[0])
         for i in range(n):
             x = points[i][0]
             y = points[i][1]
             if not check[x][y]:
                 BFS((x, y))
-                result.append(stack.copy())
+                if num != -1:
+                    result.append((stack.copy(), num))
                 stack.clear()
-                num = 0
+                num = -1
         return result
 
-    def get_slope(self, p1, p2):
-        return abs((p1[0]-p2[0]) / (p1[1]-p2[1])) if p1[1] != p2[1] else 0
+    def join_points(self, points):
+        s1, s2 = 10, 5
+        check = [False] * len(points)
+        result = []
+        for i in range(len(points)):
+            if not check[i]:
+                tmp = []
+                check[i] = True
+                p, n = points[i]
+                tmp += p
+                for j in range(i+1, len(points)):
+                    if not check[j]:
+                        np, nn = points[j]
+                        if n % 2 == nn % 2:
+                            if n % 2 == 0:
+                                p.sort()
+                                np.sort()
+                                if p[0][0] - s1 <= np[-1][0] < p[0][0] and p[0][1] - s2 <= np[-1][1] <= p[0][1] + s2:
+                                    check[j] = True
+                                    tmp = np + tmp
+                                if p[-1][0] < np[0][0] <= p[-1][0] + s1 and p[-1][1] - s2 <= np[0][1] <= p[-1][1] + s2:
+                                    check[j] = True
+                                    tmp += np
+                            if n % 2 == 1:
+                                p.sort(key=lambda x: (x[1], x[0]))
+                                np.sort(key=lambda x: (x[1], x[0]))
+                                if p[0][1] - s1 <= np[-1][1] < p[0][1] and p[0][0] - s2 <= np[-1][0] <= p[0][0] + s2:
+                                    check[j] = True
+                                    tmp = np + tmp
+                                if p[-1][1] < np[0][1] <= p[-1][1] + s1 and p[-1][0] - s2 <= np[0][0] <= p[-1][0] + s2:
+                                    check[j] = True
+                                    tmp += np
+                result.append(tmp)
+        return result
 
     def get_num(self, diff):
-        if diff[1] == 0:
-            return 1 if diff[0] >= 0 else 2
-        elif diff[0] == 0:
-            return 3 if diff[1] >= 0 else 4
+        if diff[0] == 0:
+            return 3 if diff[1] >= 0 else 1
+        elif diff[1] == 0:
+            return 4 if diff[0] >= 0 else 2
         else:
-            gradient = diff[1] / diff[0]
+            slope = diff[1] / diff[0]
             if diff[0] > 0:
-                if gradient >= 1:
+                if slope >= 1:
                     return 3
-                elif -1 <= gradient < 1:
-                    return 1
+                elif -1 <= slope < 1:
+                    return 4
                 else:
-                    return 4
+                    return 1
             else:
-                if gradient >= 1:
-                    return 4
-                elif -1 <= gradient < 1:
+                if slope >= 1:
+                    return 1
+                elif -1 <= slope < 1:
                     return 2
                 else:
                     return 3
+
+    # def get_slope(self, p1, p2):
+    #     return abs((p1[0]-p2[0]) / (p1[1]-p2[1])) if p1[1] != p2[1] else 0
 
     # def get_quadrant(self, diff):
     #     x, y = diff
