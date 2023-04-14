@@ -1,22 +1,19 @@
 from thinning import Thinning
-from multiprocessing import Process
+import threading
 import os
 
-file_path = './Thinning/data/230110/jihong/'
-file_names = os.listdir(file_path)
-# total_number = 171
-# consonant_number = 14
+read_path = "./Thinning/data/230414/jihong"
+write_path = "./Thinning/result/230414"
+file_names = os.listdir(read_path)
+n = len(file_names)
 
 
 def run(start, end):
     for file_name in file_names[start:end]:
-        print('=========== ' + file_name.rjust(7, " ") + ' ===========')
-        Thinning(file_path, os.path.splitext(file_name)[0]).run()
-
-# if __name__ == "__main__":
-#     for i in range(0, total_number, consonant_number):
-#         Process(target=run, args=(i, i+consonant_number)).start()
+        print("=========== " + file_name.rjust(7, " ") + " ===========")
+        Thinning(read_path, write_path, os.path.splitext(file_name)[0]).run()
 
 
 if __name__ == "__main__":
-    run(0, 14)
+    for i in range(0, n, 10):
+        threading.Thread(target=run, args=(i, i + 10)).start()

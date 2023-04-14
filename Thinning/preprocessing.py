@@ -3,207 +3,189 @@ import numpy as np
 import os
 from collections import deque
 
+
 class Preprocessing:
-    def __init__(self, folder_name):
-        self.folder_name = folder_name
+    def __init__(self, path):
+        self.path = path
 
     def delete_background(self, img, size, padding):
-        idx = np.where(img == 1)
-        max_x = np.max(idx[1])
-        min_x = np.min(idx[1])
-        max_y = np.max(idx[0])
-        min_y = np.min(idx[0])
-        img = img[min_y:max_y, min_x:max_x]
-        img = cv2.resize(img, (size - padding * 2, size - padding * 2))
-        tmp = np.zeros((size, size), np.uint8)
-        tmp[padding:size-padding, padding:size-padding] = img
-        return tmp
+        # Find the bounding box of the object in the image
+        nonzero_pixels = np.nonzero(img)
+        top = np.min(nonzero_pixels[0])
+        bottom = np.max(nonzero_pixels[0])
+        left = np.min(nonzero_pixels[1])
+        right = np.max(nonzero_pixels[1])
 
-    def save_img(self, img, file_name, end):
-        path = './Thinning/results/230110/' + self.folder_name + '/' + file_name
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        cv2.imwrite(path + '/' + file_name + end, img)
+        # Crop the image to the bounding box
+        cropped_img = img[top : bottom + 1, left : right + 1]
 
-    def draw_img(self, points):
-        img = np.ones((128, 128))
+        # Resize the cropped image
+        resized_img = cv2.resize(cropped_img, (size - padding * 2, size - padding * 2))
+
+        # Create a new image with the desired size and padding
+        padded_img = np.zeros((size, size), np.uint8)
+        padded_img[padding : size - padding, padding : size - padding] = resized_img
+
+        return padded_img
+
+    def save_img(self, img, file_name, extension):
+        folder_path = f"{self.path}/{file_name}"
+        os.makedirs(folder_path, exist_ok=True)
+        file_path = f"{folder_path}/{file_name}{extension}"
+        cv2.imwrite(file_path, img)
+
+    def draw_img(self, points, shape=(128, 128)):
+        img = np.ones(shape)
         for x, y in points:
             img[x][y] = 0
         return img
 
-    def erosion_dilation(self, img):
-        kernel = np.ones((3, 3), np.uint8)
-        return cv2.dilate(cv2.erode(img, kernel, iterations = 1), kernel, iterations = 1)
+    def erosion_dilation(self, img, kernel_size=3, iterations=1):
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        eroded = cv2.erode(img, kernel, iterations=iterations)
+        dilated = cv2.dilate(eroded, kernel, iterations=iterations)
+        return dilated
 
-    def simplify(self, graph):
-        size = 3    # frame 크기
-        space = 4  # 최소 point 간격
+    def simplify(self, img):
+        # Define constants
+        FRAME_SIZE = 3
+        MIN_DISTANCE = 4
+
+        # Initialize list to store simplified points
         points = []
-        for i in range(0, 128, size):
-            for j in reversed(range(0, 128, size)):
-                tf = graph[i:i+size, j:j+size] == 0
-                if tf.any():  # 흑백 부분이 있는지 여부
-                    # frame 내의 흑백 부분 찾기
-                    tmp = np.where(tf)
-                    x = i + tmp[0][0]
-                    y = j + tmp[1][0]
-                    # 설정한 간격 이내에 다른 point가 있는지 여부
-                    if not (graph[x-space:x+space, y-space:y+space] == 2).any():
-                        graph[x][y] = 2  # 없다면 2로 point 표시
+
+        # Iterate over the image in a grid of FRAME_SIZE x FRAME_SIZE
+        for i in range(0, img.shape[0], FRAME_SIZE):
+            for j in reversed(range(0, img.shape[1], FRAME_SIZE)):
+                frame = img[i:i+FRAME_SIZE, j:j+FRAME_SIZE]
+
+                # Check if there is any white pixel in the frame
+                if np.any(frame == 0):
+                    # Find the coordinates of the first white pixel in the frame
+                    x, y = np.where(frame == 0)
+                    x = i + x[0]
+                    y = j + y[0]
+                    
+                    # Check if there is any other point within the minimum distance
+                    if not np.any(img[max(0, x-MIN_DISTANCE):min(img.shape[0], x+MIN_DISTANCE),
+                                      max(0, y-MIN_DISTANCE):min(img.shape[1], y+MIN_DISTANCE)] == 2):
+                        # Mark the point as simplified and add it to the list
+                        img[x, y] = 2
                         points.append((x, y))
+
+        # Return the list of simplified points
         return points
 
     def devide(self, points):
-        n = len(points)
-        size = 10
+        """
+        Divides a set of points into clusters based on their proximity.
+        """
         result = []
-        stack = []
-        check = [[False] * 128 for _ in range(128)]
-        num = -1
+        size = 8
+        visited = [[False] * 128 for _ in range(128)]
+
         def BFS(start):
-            nonlocal num
+            """
+            Breadth-first search algorithm to find all points in a cluster.
+            """
+            nonlocal stack, recent_direction
             queue = deque()
-            check[start[0]][start[1]] = True
+            visited[start[0]][start[1]] = True
             stack.append(start)
             queue.append(start)
             while queue:
                 x, y = queue.popleft()
-                surround_points = []
+                neighbor_points = []
                 for j in range(y - size, y + size):
                     for i in range(x - size, x + size):
-                        if (i, j) in points and not check[i][j]:
-                            tmp = self.get_num([i - stack[-1][0], j - stack[-1][1]])
-                            if num == -1 or num == tmp:
-                                if num == -1:
-                                    num = tmp
-                                surround_points.append((i, j))
-                if surround_points:
-                    surround_points.sort(key=lambda x: abs(stack[-1][(num+1) % 2] - x[(num+1) % 2]))
-                    check[surround_points[0][0]][surround_points[0][1]] = True
-                    stack.append(surround_points[0])
-                    queue.append(surround_points[0])
-        for i in range(n):
-            x = points[i][0]
-            y = points[i][1]
-            if not check[x][y]:
+                        if (i, j) in points and not visited[i][j]:
+                            current_direction = self.get_direction([i - stack[-1][0], j - stack[-1][1]])
+                            if recent_direction is None or recent_direction == current_direction:
+                                if recent_direction is None:
+                                    recent_direction = current_direction
+                                neighbor_points.append((i, j))
+                if neighbor_points:
+                    neighbor_points.sort(
+                        key=lambda p: abs(stack[-1][(recent_direction + 1) % 2] - p[(recent_direction + 1) % 2])
+                    )
+                    p = neighbor_points[0]
+                    visited[p[0]][p[1]] = True
+                    stack.append(p)
+                    queue.append(p)
+
+        for x, y in points:
+            if not visited[x][y]:
+                stack = []
+                recent_direction = None
                 BFS((x, y))
-                if num != -1:
-                    result.append((stack.copy(), num))
-                stack.clear()
-                num = -1
+                if recent_direction is not None:
+                    result.append((stack.copy(), recent_direction % 2))
+
         return result
 
     def join_points(self, points):
-        s1, s2 = 10, 5
-        check = [False] * len(points)
         result = []
-        for i in range(len(points)):
+        s1, s2 = 12, 8
+        check = [False] * len(points)
+        
+        def can_join(p1, n1, p2, n2):
+            if n1 != n2:
+                return False
+            if n1 == 0:
+                p1.sort()
+                p2.sort()
+                if (
+                    p1[0][0] - s1 <= p2[-1][0] < p1[0][0]
+                    and p1[0][1] - s2 <= p2[-1][1] <= p1[0][1] + s2
+                ):
+                    return True
+                if (
+                    p1[-1][0] < p2[0][0] <= p1[-1][0] + s1
+                    and p1[-1][1] - s2 <= p2[0][1] <= p1[-1][1] + s2
+                ):
+                    return True
+            else:
+                p1.sort(key=lambda x: (x[1], x[0]))
+                p2.sort(key=lambda x: (x[1], x[0]))
+                if (
+                    p1[0][1] - s1 <= p2[-1][1] < p1[0][1]
+                    and p1[0][0] - s2 <= p2[-1][0] <= p1[0][0] + s2
+                ):
+                    return True
+                if (
+                    p1[-1][1] < p2[0][1] <= p1[-1][1] + s1
+                    and p1[-1][0] - s2 <= p2[0][0] <= p1[-1][0] + s2
+                ):
+                    return True
+            return False
+        
+        for i, (p, n) in enumerate(points):
             if not check[i]:
-                tmp = []
+                tmp = p.copy()
                 check[i] = True
-                p, n = points[i]
-                tmp += p
-                for j in range(i+1, len(points)):
+                for j in range(i + 1, len(points)):
                     if not check[j]:
                         np, nn = points[j]
-                        if n % 2 == nn % 2:
-                            if n % 2 == 0:
-                                p.sort()
-                                np.sort()
-                                if p[0][0] - s1 <= np[-1][0] < p[0][0] and p[0][1] - s2 <= np[-1][1] <= p[0][1] + s2:
-                                    check[j] = True
-                                    tmp = np + tmp
-                                if p[-1][0] < np[0][0] <= p[-1][0] + s1 and p[-1][1] - s2 <= np[0][1] <= p[-1][1] + s2:
-                                    check[j] = True
-                                    tmp += np
-                            if n % 2 == 1:
-                                p.sort(key=lambda x: (x[1], x[0]))
-                                np.sort(key=lambda x: (x[1], x[0]))
-                                if p[0][1] - s1 <= np[-1][1] < p[0][1] and p[0][0] - s2 <= np[-1][0] <= p[0][0] + s2:
-                                    check[j] = True
-                                    tmp = np + tmp
-                                if p[-1][1] < np[0][1] <= p[-1][1] + s1 and p[-1][0] - s2 <= np[0][0] <= p[-1][0] + s2:
-                                    check[j] = True
-                                    tmp += np
-                result.append(tmp)
+                        if can_join(p, n, np, nn):
+                            check[j] = True
+                            if n == 0:
+                                tmp = np + tmp
+                            else:
+                                tmp += np
+                result.append((tmp, n))
         return result
 
-    def get_num(self, diff):
+    def get_direction(self, diff):
+        # Check for vertical and horizontal lines
         if diff[0] == 0:
             return 3 if diff[1] >= 0 else 1
         elif diff[1] == 0:
             return 4 if diff[0] >= 0 else 2
+        # Compute slope for diagonal lines
         else:
             slope = diff[1] / diff[0]
+            # Compute direction based on slope and quadrant
             if diff[0] > 0:
-                if slope >= 1:
-                    return 3
-                elif -1 <= slope < 1:
-                    return 4
-                else:
-                    return 1
+                return 3 if slope >= 1 else 4 if -1 <= slope < 1 else 1
             else:
-                if slope >= 1:
-                    return 1
-                elif -1 <= slope < 1:
-                    return 2
-                else:
-                    return 3
-
-    # def get_slope(self, p1, p2):
-    #     return abs((p1[0]-p2[0]) / (p1[1]-p2[1])) if p1[1] != p2[1] else 0
-
-    # def get_quadrant(self, diff):
-    #     x, y = diff
-    #     if x == 0:
-    #         return 3 if y >= 0 else 1
-    #     if y == 0:
-    #         return 4 if x >= 0 else 2
-        
-    #     if x > 0:
-    #         if y > 0:
-    #             return 1
-    #         else:
-    #             return 4
-    #     else:
-    #         if y > 0:
-    #             return 2
-    #         else:
-    #             return 3
-
-    # def devide(self, graph):
-    #     result = []
-    #     stack = []
-    #     max_size = 25
-    #     min_size = 2
-
-    #     dx = [-1, 0, 1, 1, 1, 0, -1, -1]
-    #     dy = [1, 1, 1, 0, -1, -1, -1, 0]
-
-    #     def DFS(x, y):
-    #         if len(stack) > max_size and (3 < abs((stack[0][1] - y) / (stack[0][0] - x)) or abs((stack[0][1] - y) / (stack[0][0] - x)) < 0.33):
-    #             result.append(copy.deepcopy(stack))
-    #             stack.clear()
-    #             return
-    #         else:
-    #             for i in range(8):
-    #                 nx = x + dx[i]
-    #                 ny = y + dy[i]
-    #                 if 0 <= nx < 128 and 0 <= ny < 128 and graph[nx][ny] == 0:
-    #                     graph[nx][ny] = 1
-    #                     stack.append((nx, ny))
-    #                     DFS(nx, ny)
-
-    #     for i in range(128):
-    #         for j in range(128):
-    #             if graph[j][i] == 0:
-    #                 graph[j][i] = 1
-    #                 stack.append((j, i))
-    #                 DFS(j, i)
-    #                 if len(stack) < min_size:
-    #                     stack.clear()
-
-    #     if stack:
-    #         result.append(copy.deepcopy(stack))
-
-    #     return result
+                return 1 if slope >= 1 else 2 if -1 <= slope < 1 else 3
